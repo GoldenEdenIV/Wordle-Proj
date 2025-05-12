@@ -140,9 +140,9 @@ def best_guess(possible_words, model, round_num):
         return possible_words[0]
 
     if round_num == 1:
-        best_start = ['arose', 'raise', 'stare', 'slate', 'crane']
+        best_start = ['a', 'am', 'are', 'game', 'arose', 'amount', 'outside', 'mountain', 'education', 'precaution']
         for starter in best_start:
-            if starter in possible_words:
+            if starter in possible_words and len(starter) == length:
                 return starter
     
     word_scores = []
