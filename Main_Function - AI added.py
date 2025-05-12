@@ -33,7 +33,7 @@ BIGRAM_FREQUENCY = {
 
 word_list = [x.lower() for x in words.words()]
 
-def train_word_model(word_list):
+def train_wordle_model(word_list):
     X = []
     y = []
 
@@ -135,19 +135,21 @@ def filter(possible_words, guess, result):
             new_possible_words.append(word)
     return new_possible_words
 
-def best_guess_ml(possible_words, model, round_num):
+def best_guess(possible_words, model, round_num):
     if len(possible_words) == 1:
         return possible_words[0]
 
     if round_num == 1:
-        best_starters = ['soare', 'arose', 'raise', 'stare', 'slate', 'crane']
-        for starter in best_starters:
+        best_start = ['arose', 'raise', 'stare', 'slate', 'crane']
+        for starter in best_start:
             if starter in possible_words:
                 return starter
     
     word_scores = []
+
     for word in possible_words:
         features = extract_features(word)
+
         ml_score = model.predict([features])[0]
         
         unique_letters = len(set(word))
@@ -163,6 +165,7 @@ def best_guess_ml(possible_words, model, round_num):
     word_scores.sort(key=lambda x: x[1], reverse=True)
 
     top_count = max(1, int(len(word_scores) * 0.1))
+    
     top_words = [word for word, score in word_scores[:top_count]]
     
     return random.choice(top_words)
@@ -171,12 +174,11 @@ def best_guess_ml(possible_words, model, round_num):
 def main():
     word = choose_word()
     possible_words = [w for w in word_list if len(w) == length]
-    model = train_word_model(word_list)
-    
+    model = train_wordle_model(word_list)
     guess = ""
     i = 1
     while guess != word:
-        guess = best_guess_ml(possible_words, model, i)
+        guess = best_guess(possible_words, model, i)
         print(f"Attempt {i}: {guess}")
         result = after_guess(word, guess)
         print(f"Result: {result}")
@@ -194,13 +196,18 @@ def main():
 def main2():
     word = choose_word_ran()
     print("A word has been chosen.")
+    possible_words = [w for w in word_list if len(w) == length]
+    model = train_wordle_model(word_list)
+    ai_help = ""
     guess = ""
     i = 1
     while guess != word:
+        ai_help = best_guess(possible_words, model, i)
+        print(f"AI suggestion: {ai_help}")
         attempt = True
         while attempt == True:
             guess = input(f"Attempt {i}: ")
-            if len(guess) != length:
+            if len(guess) != length and guess not in word_list:
                 attempt = True
             else:
                 attempt = False
@@ -216,6 +223,7 @@ def main2():
             if i >= 5:
                 print(f"You failed. The answer is {word}")
                 break
+        possible_words = filter(possible_words, guess, result)
         i += 1
         attempt = True
 
@@ -225,7 +233,7 @@ def main3():
     guess = ""
     i = 1
     possible_words = [w for w in word_list if len(w) == length]
-    model = train_word_model(word_list)
+    model = train_wordle_model(word_list)
     
     while guess != word:
         attempt = True
@@ -239,25 +247,27 @@ def main3():
         result = after_guess(word, guess)
         print(f"Your result: {result}")
 
-        ai_guess = best_guess_ml(possible_words, model, i)
+        ai_guess = best_guess(possible_words, model, i)
         print(f"- AI attempt {i}: {ai_guess}")
         ai_result = after_guess(word, ai_guess)
         print(f"- AI result: {ai_result}")
+        print("===============")
         if guess == word and ai_guess != word:
             print("You found the word before AI!")
             break
         elif guess != word and ai_guess == word:
             print("You lose.")
             break
-        elif guess != word and ai_guess != word and i > 5:
+        elif guess != word and ai_guess != word and i >= 5:
             print("Hard word, huh?.")
+            print(f"The answer was {word}")
             break
         i += 1
         attempt = True
         possible_words = filter(possible_words, ai_guess, ai_result)
 
 print("1. AI guess")
-print("2. You guess")
+print("2. You guess with assistant")
 print("3. You vs AI")
 mode = input("Choose the mode: ")
 if mode == "1":
