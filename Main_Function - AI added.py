@@ -1,7 +1,6 @@
 import random
 import numpy as np
 from nltk.corpus import words
-from collections import Counter
 from sklearn.ensemble import RandomForestRegressor 
 
 LETTER_FREQUENCY = {
