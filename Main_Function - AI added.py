@@ -182,10 +182,10 @@ def main():
         print(f"Attempt {i}: {guess}")
         result = after_guess(word, guess)
         print(f"Result: {result}")
-        if guess == word and i <= 5:
+        if guess == word and i <= 6:
             print("AI found the word!")
             break
-        elif guess == word and i > 5:
+        elif guess == word and i > 6:
             print("AI failed.")
             break
 
@@ -207,20 +207,20 @@ def main2():
         attempt = True
         while attempt == True:
             guess = input(f"Attempt {i}: ")
-            if len(guess) != length and guess not in word_list:
+            if len(guess) != length or guess not in word_list:
                 attempt = True
             else:
                 attempt = False
         result = after_guess(word, guess)
         print(f"Result: {result}")
-        if guess == word and i <= 5:
+        if guess == word and i <= 6:
             print("You found the word!")
             break
-        elif guess != word and i >= 5:
+        elif guess != word and i >= 6:
             print(f"You failed. The answer is {word}")
             break
         else:
-            if i >= 5:
+            if i >= 6:
                 print(f"You failed. The answer is {word}")
                 break
         possible_words = filter(possible_words, guess, result)
@@ -240,7 +240,7 @@ def main3():
         while attempt == True:
             print(f"Your attempt {i}: ", end="")
             guess = input()
-            if len(guess) != length:
+            if len(guess) != length or guess not in word_list:
                 attempt = True
             else:
                 attempt = False
@@ -258,7 +258,7 @@ def main3():
         elif guess != word and ai_guess == word:
             print("You lose.")
             break
-        elif guess != word and ai_guess != word and i >= 5:
+        elif guess != word and ai_guess != word and i >= 6:
             print("Hard word, huh?.")
             print(f"The answer was {word}")
             break
