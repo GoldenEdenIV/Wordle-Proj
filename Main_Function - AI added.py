@@ -1,36 +1,35 @@
-import random
-import numpy as np
+import nltk
+nltk.download('words')
 from nltk.corpus import words
-from sklearn.ensemble import RandomForestRegressor 
+import random
+from sklearn.ensemble import RandomForestRegressor
+
+word_list = [x.lower() for x in words.words()]
 
 LETTER_FREQUENCY = {
-    'e': 12.02, 't': 9.10, 'a': 8.12, 'o': 7.68, 'i': 7.31, 'n': 6.95, 's': 6.28, 'r': 6.02, 
-    'h': 5.92, 'd': 4.32, 'l': 3.98, 'u': 2.88, 'c': 2.71, 'm': 2.61, 'f': 2.30, 'y': 2.11, 
-    'w': 2.09, 'g': 2.03, 'p': 1.82, 'b': 1.49, 'v': 1.11, 'k': 0.69, 'x': 0.17, 'q': 0.11, 
-    'j': 0.10, 'z': 0.07
+    'e': 12.49, 't': 9.28, 'a': 8.04, 'o': 7.64, 'i': 7.57, 'n': 7.23, 's': 6.51, 'r': 6.28, 
+    'h': 5.05, 'd': 3.82, 'l': 4.07, 'u': 2.73, 'c': 3.34, 'm': 2.51, 'f': 2.40, 'y': 1.66, 
+    'w': 1.68, 'g': 1.87, 'p': 2.14, 'b': 1.48, 'v': 1.05, 'k': 0.54, 'x': 0.23, 'q': 0.12, 
+    'j': 0.16, 'z': 0.09
 }
 
 FIRST_LETTER_FREQUENCY = {
-    's': 12.55, 'c': 8.40, 'p': 8.02, 'a': 7.86, 't': 7.00, 'b': 6.10, 'f': 5.74, 'm': 5.68,
-    'd': 5.52, 'r': 5.50, 'h': 4.98, 'e': 3.91, 'i': 3.70, 'l': 3.49, 'n': 3.01, 'o': 2.85,
-    'g': 2.47, 'w': 2.14, 'u': 1.28, 'v': 1.05, 'j': 0.81, 'k': 0.81, 'q': 0.49, 'y': 0.30,
-    'z': 0.23, 'x': 0.10
-}
-
-LAST_LETTER_FREQUENCY = {
-    'e': 21.22, 's': 12.75, 't': 8.61, 'd': 6.73, 'n': 6.27, 'r': 6.03, 'y': 5.75, 'a': 4.97,
-    'l': 4.92, 'o': 3.84, 'h': 3.41, 'g': 2.99, 'm': 2.25, 'c': 1.79, 'k': 1.63, 'p': 1.49,
-    'f': 1.31, 'i': 1.29, 'b': 0.86, 'u': 0.84, 'w': 0.65, 'z': 0.24, 'x': 0.07, 'v': 0.06,
-    'q': 0.02, 'j': 0.01
+    't': 17.0, 'a': 11.0, 'o': 7.5, 'i': 5.5, 's': 10.0, 'w': 6.8, 'c': 3.0, 'b': 2.5,
+    'p': 3.5, 'f': 3.0, 'm': 2.0, 'r': 5.5, 'd': 2.5, 'h': 6.0, 'e': 3.0, 'l': 2.0,
+    'n': 4.0, 'g': 3.5, 'u': 1.5, 'y': 1.5, 'v': 1.0, 'j': 0.5, 'k': 0.8, 'q': 0.3,
+    'z': 0.2, 'x': 0.3
 }
 
 BIGRAM_FREQUENCY = {
-    'th': 3.56, 'he': 3.07, 'in': 2.43, 'er': 2.05, 'an': 1.99, 're': 1.85, 'on': 1.76, 'at': 1.49,
+    'th': 3.56, 'he': 3.02, 'in': 2.43, 'er': 2.05, 'an': 1.99, 're': 1.85, 'on': 1.76, 'at': 1.49,
     'en': 1.45, 'nd': 1.35, 'ti': 1.34, 'es': 1.34, 'or': 1.28, 'te': 1.20, 'of': 1.17, 'ed': 1.17,
-    'is': 1.13, 'it': 1.12, 'al': 1.09, 'ar': 1.07, 'st': 1.05, 'to': 1.04, 'nt': 1.04, 'ng': 0.95
+    'is': 1.13, 'it': 1.12, 'al': 1.09, 'ar': 1.07, 'st': 1.05, 'to': 1.04, 'nt': 1.04, 'ng': 0.95,
+    'se': 0.93, 'ha': 0.93, 'as': 0.87, 'ou': 0.87, 'io': 0.83, 've': 0.83, 'le': 0.79, 'me': 0.79,
+    'de': 0.76, 'hi': 0.76, 'ri': 0.73, 'ro': 0.73, 'ic': 0.70, 'ne': 0.69, 'ea': 0.69, 'ra': 0.69,
+    'ce': 0.68, 'li': 0.62, 'ch': 0.60, 'll': 0.58, 'be': 0.58, 'ma': 0.57, 'si': 0.55, 'om': 0.55,
+    'ur': 0.54
 }
 
-word_list = [x.lower() for x in words.words()]
 
 def train_wordle_model(word_list):
     X = []
@@ -47,8 +46,6 @@ def train_wordle_model(word_list):
         features.append(letter_score)
         
         features.append(FIRST_LETTER_FREQUENCY.get(word[0], 0))
-        
-        features.append(LAST_LETTER_FREQUENCY.get(word[-1], 0))
         
         bigram_score = 0
         for i in range(len(word)-1):
@@ -76,13 +73,8 @@ def extract_features(word):
     letter_score = sum(LETTER_FREQUENCY.get(letter, 0) for letter in word)
     features.append(letter_score)
     
-
     features.append(FIRST_LETTER_FREQUENCY.get(word[0], 0))
     
-
-    features.append(LAST_LETTER_FREQUENCY.get(word[-1], 0))
-    
-
     bigram_score = 0
     for i in range(len(word)-1):
         bigram = word[i:i+2]
@@ -100,7 +92,6 @@ def choose_word():
         ans = input("Choose the word: ")
         ans = ans.lower()
     return ans
-
 
 def choose_word_ran():
     return random.choice([w for w in word_list if len(w) == length])
