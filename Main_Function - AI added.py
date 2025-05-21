@@ -3,6 +3,12 @@ nltk.download('words')
 from nltk.corpus import words
 import random
 from sklearn.ensemble import RandomForestRegressor
+import os
+import joblib  # Add this import for model saving/loading
+
+new_path = r"C:\Users\ADMIN\Desktop\AI\Final\Wordle-Proj"
+os.chdir(new_path)
+
 
 word_list = [x.lower() for x in words.words()]
 
@@ -31,7 +37,15 @@ BIGRAM_FREQUENCY = {
 }
 
 
-def train_wordle_model(word_list):
+def train_wordle_model(word_list, length):
+    model_filename = f"wordle_model_{length}.joblib"
+    if os.path.exists(model_filename):
+        choice = input("Model already exists. 1. Load existing. 2. Train new. ")
+        if choice == "1":
+            print(f"Loading existing model for {length}-letter words...")
+            return joblib.load(model_filename)
+    
+    print(f"Training new model for {length}-letter words...")
     X = []
     y = []
 
@@ -64,12 +78,14 @@ def train_wordle_model(word_list):
     model = RandomForestRegressor(n_estimators=50, random_state=42)
     model.fit(X, y)
     
+    joblib.dump(model, model_filename)
+    print(f"Model saved as {model_filename}")
+    
     return model
 
 def extract_features(word):
     features = []
     
- 
     letter_score = sum(LETTER_FREQUENCY.get(letter, 0) for letter in word)
     features.append(letter_score)
     
@@ -119,8 +135,17 @@ def filter(possible_words, guess, result):
                 match = False
                 break
             elif result[i] == "🟥" and guess[i] in word:
-                match = False
-                break
+                letter_count_in_word = word.count(guess[i])
+                letter_count_in_guess = guess.count(guess[i])
+                green_or_yellow_count = 0
+                
+                for j in range(len(word)):
+                    if guess[j] == guess[i] and (result[j] == "🟩" or result[j] == "🟨"):
+                        green_or_yellow_count += 1
+                
+                if green_or_yellow_count < letter_count_in_word:
+                    match = False
+                    break
         if match:
             new_possible_words.append(word)
     return new_possible_words
@@ -129,12 +154,6 @@ def best_guess(possible_words, model, round_num):
     if len(possible_words) == 1:
         return possible_words[0]
 
-    if round_num == 1:
-        best_start = ['a', 'am', 'are', 'game', 'arose', 'amount', 'outside', 'mountain', 'education', 'precaution']
-        for starter in best_start:
-            if starter in possible_words and len(starter) == length:
-                return starter
-    
     word_scores = []
 
     for word in possible_words:
@@ -146,7 +165,10 @@ def best_guess(possible_words, model, round_num):
         info_value = unique_letters / length
 
         if round_num <= 3:
-            final_score = ml_score * 0.3 + info_value * 0.7
+            if round_num == 1:
+                final_score = info_value
+            else:
+                final_score = ml_score * 0.3 + info_value * 0.7
         else:
             final_score = ml_score * 0.7 + info_value * 0.3
             
@@ -164,7 +186,7 @@ def best_guess(possible_words, model, round_num):
 def main():
     word = choose_word()
     possible_words = [w for w in word_list if len(w) == length]
-    model = train_wordle_model(word_list)
+    model = train_wordle_model(word_list, length)
     guess = ""
     i = 1
     while guess != word:
@@ -187,7 +209,7 @@ def main2():
     word = choose_word_ran()
     print("A word has been chosen.")
     possible_words = [w for w in word_list if len(w) == length]
-    model = train_wordle_model(word_list)
+    model = train_wordle_model(word_list, length)
     ai_help = ""
     guess = ""
     i = 1
@@ -223,7 +245,7 @@ def main3():
     guess = ""
     i = 1
     possible_words = [w for w in word_list if len(w) == length]
-    model = train_wordle_model(word_list)
+    model = train_wordle_model(word_list, length)
     
     while guess != word:
         attempt = True
@@ -268,7 +290,11 @@ elif mode == "2":
     length = int(input("Choose the number of letters: "))
     word_list = [x.lower() for x in words.words() if len(x)==length]
     main2()
-else:
+elif mode == "3":
     length = int(input("Choose the number of letters: "))
     word_list = [x.lower() for x in words.words() if len(x)==length]
     main3()
+else:
+    length = int(input("Choose the number of letters: "))
+    word_list = [x.lower() for x in words.words() if len(x)==length]
+    main()
